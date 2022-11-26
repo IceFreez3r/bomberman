@@ -35,54 +35,51 @@ class Bomberman:
         self.multiplayer = multiplayer
         self.characters = []
         for id, pos in enumerate([(0, 0), (self.width - 1, self.height - 1), (self.width - 1, 0), (0, self.height - 1)]):  # corners
-            self.characters.append(self.initCharacter(id, pos))
+            self.characters.append(self.init_character(id, pos))
 
         # bind keys
-        self.master.bind("<Up>", lambda event: self.movePlayer(event))
-        self.master.bind("<Left>", lambda event: self.movePlayer(event))
-        self.master.bind("<Down>", lambda event: self.movePlayer(event))
-        self.master.bind("<Right>", lambda event: self.movePlayer(event))
-        self.master.bind("w", lambda event: self.movePlayer(event))
-        self.master.bind("a", lambda event: self.movePlayer(event))
-        self.master.bind("s", lambda event: self.movePlayer(event))
-        self.master.bind("d", lambda event: self.movePlayer(event))
-        self.master.bind("<space>", lambda event: self.placeBomb(0))
-        self.master.bind("<Return>", lambda event: self.placeBomb(1)) # bomb player 1
+        self.master.bind("<Up>", lambda event: self.move_player(event))
+        self.master.bind("<Left>", lambda event: self.move_player(event))
+        self.master.bind("<Down>", lambda event: self.move_player(event))
+        self.master.bind("<Right>", lambda event: self.move_player(event))
+        self.master.bind("w", lambda event: self.move_player(event))
+        self.master.bind("a", lambda event: self.move_player(event))
+        self.master.bind("s", lambda event: self.move_player(event))
+        self.master.bind("d", lambda event: self.move_player(event))
+        self.master.bind("<space>", lambda event: self.place_bomb(0))
+        self.master.bind("<Return>", lambda event: self.place_bomb(1)) # bomb player 1
 
         # start game
         self.tick(50)
 
-    def initCharacter(self, id, pos):
+    def init_character(self, id, pos):
         '''Initialize a character'''
-        character = {}
-        character["pos"] = pos
-        character["powerups"] = {
+        character = {"pos": pos, "powerups": {
             "bomb_range": 2,
             "bomb_amount": 1,
             "throw_bomb": False,
             "kick_bomb": False,
             "movement_speed": 1,  # es nothing
-        }
-        character["alive"] = True
-        character["Label"] = Label(self.canvas, image=self.sprites.PLAYER[id]["DOWN"], width=self.CELLSIZE, height=self.CELLSIZE)
+        }, "alive": True, "Label": Label(self.canvas, image=self.sprites.PLAYER[id]["DOWN"], width=self.CELLSIZE,
+                                         height=self.CELLSIZE)}
         character["Label"].place(x=character["pos"][0] * self.CELLSIZE, y=character["pos"][1] * self.CELLSIZE)
         return character
 
     def tick(self, delay):
         self.time += delay
         for bombPos in self.bombPositions:
-            if (self.grid.get(*bombPos)["time"] < self.time):
-                self.explodeBomb(bombPos)
+            if self.grid.get(*bombPos)["time"] < self.time:
+                self.explode_bomb(bombPos)
         # TODO: remove fire
         # TODO: check if there is more than one players left
         self.canvas.after(delay, self.tick, delay)
 
-    def placeBomb(self, characterId):
+    def place_bomb(self, characterId):
         '''Place a bomb at the position of the character if possible'''
-        charBombs = [1 for bombPos in self.bombPositions if self.grid.get(*bombPos)["owner"] == characterId]
-        if self.characters[characterId]["powerups"]["bomb_amount"] <= len(charBombs):
+        char_bombs = [1 for bombPos in self.bombPositions if self.grid.get(*bombPos)["owner"] == characterId]
+        if self.characters[characterId]["powerups"]["bomb_amount"] <= len(char_bombs):
             return
-        pos = self.getPosition(characterId)
+        pos = self.get_position(characterId)
         bomb = {
             "type": "BOMB",
             "owner": characterId,
@@ -95,7 +92,7 @@ class Bomberman:
         self.bombPositions.append(pos)
         print(f"Bomb placed at {pos}")
 
-    def explodeBomb(self, pos):
+    def explode_bomb(self, pos):
         # Go in all four directions until we hit a indestructible wall
         # or the first destructible wall
         # remove the first destructible wall in each direction (-> chance for powerups)
@@ -111,17 +108,17 @@ class Bomberman:
         self.grid.board[pos[0]][pos[1]] = {"type": "NONE"}
         for direction in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             i = 0
-            while (i <= bomb["range"] and self.grid.explodePosition(pos[0] + i * direction[0], pos[1] + i * direction[1])):
+            while i <= bomb["range"] and self.grid.explode_position(pos[0] + i * direction[0], pos[1] + i * direction[1]):
                 for character in self.characters:
                     if character["alive"] and character["pos"] == (pos[0] + i * direction[0], pos[1] + i * direction[1]):
-                        self.killCharacter(character)
+                        self.kill_character(character)
                 i += 1
 
-    def getPosition(self, player):
+    def get_position(self, player):
         '''Get the position of the player'''
         return self.characters[player]["pos"]
 
-    def moveCharacter(self, id, direction):
+    def move_character(self, id, direction):
         '''Move the character'''
         if not self.characters[id]["alive"]:
             return
@@ -129,16 +126,16 @@ class Bomberman:
         character = self.characters[id]
         x, y = character["pos"]
         # new position
-        if (direction == "UP"):
+        if direction == "UP":
             y -= 1
-        elif (direction == "LEFT"):
+        elif direction == "LEFT":
             x -= 1
-        elif (direction == "DOWN"):
+        elif direction == "DOWN":
             y += 1
-        elif (direction == "RIGHT"):
+        elif direction == "RIGHT":
             x += 1
         # check if position is free
-        if self.grid.viableSpot(x, y, character["powerups"]["kick_bomb"]):
+        if self.grid.viable_spot(x, y, character["powerups"]["kick_bomb"]):
             character["pos"] = (x, y)
         # delete old player
         character["Label"].destroy()
@@ -147,31 +144,32 @@ class Bomberman:
         character["Label"].place(x=character["pos"][0] * self.CELLSIZE, y=character["pos"][1] * self.CELLSIZE)
         print(f"Player {id} moved to {character['pos']}")
         
-    def movePlayer(self, event):
+    def move_player(self, event):
         '''Move the player'''
         print(event)
         # get player
-        playerOneMoves = ['w', 'a', 's', 'd']
-        playerTwoMoves = ['Up', 'Left', 'Down', 'Right']
+        player_one_moves = ['w', 'a', 's', 'd']
+        player_two_moves = ['Up', 'Left', 'Down', 'Right']
         moves = ["UP", "LEFT", "DOWN", "RIGHT"]
-        if (event.keysym in playerOneMoves ):
-            index = playerOneMoves.index(event.keysym)
-            self.moveCharacter(0, moves[index])
-        elif (self.multiplayer and event.keysym in playerTwoMoves):
-            index = playerTwoMoves.index(event.keysym)
-            self.moveCharacter(1, moves[index])
+        if event.keysym in player_one_moves :
+            index = player_one_moves.index(event.keysym)
+            self.move_character(0, moves[index])
+        elif self.multiplayer and event.keysym in player_two_moves:
+            index = player_two_moves.index(event.keysym)
+            self.move_character(1, moves[index])
 
-    def killCharacter(self, character):
+    def kill_character(self, character):
         '''Kill the character'''
         character["Label"].destroy()
         character["alive"] = False
         print(f"Player {self.characters.index(character)} died")
 
-##### Gedanken zur board matrix:
-## board hat verschiedene cellen: jede Zelle bekommt ein dict
-## @case1 IMMUNE wall (label)
-## @case2 BREAKABLE wall (label)
-## @case2 bomb (time, power, owner, label)
+# Gedanken zur board matrix:
+# board hat verschiedene cellen: jede Zelle bekommt ein dict
+# @case1 IMMUNE wall (label)
+# @case2 BREAKABLE wall (label)
+# @case2 bomb (time, power, owner, label)
+
 
 class Grid:
     def __init__(self, game, width, height):
@@ -198,7 +196,7 @@ class Grid:
                 cell["Label"].place(x=x * self.game.CELLSIZE, y=y * self.game.CELLSIZE)
                 self.board[x][y] = cell
 
-    def viableSpot(self, x, y, pushBombs = False):
+    def viable_spot(self, x, y, pushBombs = False):
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
             return False
         if not pushBombs:
@@ -207,24 +205,24 @@ class Grid:
             # push bomb here?
             return self.board[x][y]["type"] == "NONE" or self.board[x][y]["type"] == "BOMB"
 
-    def explodePosition(self, x, y):
+    def explode_position(self, x, y):
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
             return False
         elif self.board[x][y]["type"] == "IMMUNE_WALL":
             return False
-        continueExplode = True
+        continue_explode = True
         if self.board[x][y]["type"] == "BREAKABLE_WALL":
             self.board[x][y]["Label"].destroy()
             self.board[x][y]["type"] = "NONE"
             print(f"Wall at {x}, {y} destroyed")
             # TODO: spawn powerup
-            continueExplode = False
+            continue_explode = False
         elif self.board[x][y]["type"] == "BOMB":
-            self.game.explodeBomb((x, y))
-        self.burnPosition(x, y)
-        return continueExplode
+            self.game.explode_bomb((x, y))
+        self.burn_position(x, y)
+        return continue_explode
 
-    def burnPosition(self, x, y):
+    def burn_position(self, x, y):
         if self.board[x][y]["type"] == "FIRE":
             self.board[x][y]["time"] = self.game.time + 1000
         else:
@@ -240,6 +238,7 @@ class Grid:
     def get(self, x, y):
         return self.board[x][y]
 
+
 window = Tk()
-bomb = Bomberman(window, 15, 11)
+bomberman = Bomberman(window, 15, 11)
 window.mainloop()
