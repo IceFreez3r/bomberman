@@ -58,8 +58,8 @@ class Config:
         self.INIT_POWERUPS = {
             Powerup.BOMB_AMOUNT: 1,
             Powerup.BOMB_RANGE: 2,
-            Powerup.THROW_BOMB: 1,
-            Powerup.KICK_BOMB: True,
+            Powerup.THROW_BOMB: 0,
+            Powerup.KICK_BOMB: False,
             Powerup.MOVEMENT_SPEED: 1,
         }
         self.LIFES = 1
